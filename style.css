@@ -1,0 +1,143 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .game-container {
+    text-align: center;
+  }
+  
+  #cups {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  
+  .cup {
+    width: 100px;
+    height: 150px;
+    background: #8b5cf6;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transform: translateY(0);
+    transition: transform 0.3s;
+  }
+  
+  .cup:hover {
+    transform: translateY(-10px);
+  }
+  
+  button {
+    padding: 10px 20px;
+    background: #34d399;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background: #059669;
+  }
+  /* Yeni: Bardak animasyonu */
+@keyframes shuffle {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(50px, -20px);
+  }
+  50% {
+    transform: translate(0, -40px);
+  }
+  75% {
+    transform: translate(-50px, -20px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* Karıştırma sırasında bardaklara animasyon uygulamak için bir sınıf */
+.cup.shuffling {
+  animation: shuffle 0.5s ease-in-out;
+}
+/* Top için tasarım */
+.ball {
+  width: 30px;
+  height: 30px;
+  background: red;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 10px; /* Bardağın alt kısmında saklı */
+  left: 50%;
+  transform: translate(-50%, 100%); /* Saklı pozisyon */
+  opacity: 0; /* Başlangıçta görünmez */
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* Bardak yukarı açılma animasyonu */
+.cup.open {
+  transform: translateY(-100px); /* Yukarı kaydır */
+  transition: transform 0.5s ease-out;
+}
+
+/* Açılan bardakta top görünür */
+.cup.open .ball {
+  transform: translate(-50%, 0); /* Ortaya gelir */
+  opacity: 1; /* Görünür olur */
+}
+
+  /* Modal arka plan */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Arka plan opaklığı */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal başlangıçta gizli */
+.hidden {
+  display: none;
+}
+
+/* Modal içeriği */
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+/* Modal kapatma düğmesi */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: red;
+}
+
+/* Bardak düzeni */
+#cups {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}

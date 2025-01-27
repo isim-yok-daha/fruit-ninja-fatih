@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Ninja - Cutting Effect</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<script>
+    const config = {
+        type: Phaser.AUTO,
+        width: 480,
+        height: 800,
+        physics: {
+            default: 'arcade',
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let fruits;
+    let score = 0;
+    let scoreText;
+    let lastPointerPosition = null;
+
+    function preload() {
+        this.load.image('background', 'https://via.placeholder.com/480x800/87CEEB/FFFFFF?text=Background');
+        this.load.image('fruit', 'https://via.placeholder.com/64x64/FF6347/FFFFFF?text=Fruit');
+        this.load.image('fruit_half', 'https://via.placeholder.com/32x64/FF6347/FFFFFF?text=Half'); // Placeholder for sliced fruit
+    }
+
+    function create() {
+        // Background
+        this.add.image(240, 400, 'background');
+
+        // Score display
+        scoreText = this.add.text(10, 10, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+
+        // Group to hold all fruits
+        fruits = this.physics.add.group();
+
+        // Timer for spawning fruits
+        this.time.addEvent({
+            delay: 1000, // Spawn every second
+            callback: spawnFruit,
+            callbackScope: this,
+            loop: true
+        });
+
+        // Enable pointer movement for slicing
+        this.input.on('pointermove', pointerMoveHandler, this);
+    }
+
+    function update() {}
+
+    function spawnFruit() {
+        const x = Phaser.Math.Between(50, 430); // Random horizontal position
+        const fruit = fruits.create(x, 800, 'fruit');
+        fruit.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400)); // Random speed
+        fruit.setInteractive();
+        fruit.body.setAllowGravity(false);
+    }
+
+    function pointerMoveHandler(pointer) {
+        if (!lastPointerPosition) {
+            lastPointerPosition = { x: pointer.x, y: pointer.y };
+            return;
+        }
+
+        // Check if pointer intersects with any fruits
+        fruits.children.iterate(fruit => {
+            if (fruit && Phaser.Geom.Intersects.LineToRectangle(
+                new Phaser.Geom.Line(lastPointerPosition.x, lastPointerPosition.y, pointer.x, pointer.y),
+                fruit.getBounds()
+            )) {
+                // Slice the fruit
+                sliceFruit(this, fruit);
+            }
+        });
+
+        lastPointerPosition = { x: pointer.x, y: pointer.y };
+    }
+
+    function sliceFruit(scene, fruit) {
+        // Destroy the original fruit
+        fruit.destroy();
+
+        // Add two halves at the same position
+        const leftHalf = scene.add.image(fruit.x - 16, fruit.y, 'fruit_half');
+        const rightHalf = scene.add.image(fruit.x + 16, fruit.y, 'fruit_half');
+
+        // Animate the halves
+        scene.tweens.add({
+            targets: leftHalf,
+            x: leftHalf.x - 50,
+            y: leftHalf.y + 50,
+            angle: -45,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => leftHalf.destroy()
+        });
+
+        scene.tweens.add({
+            targets: rightHalf,
+            x: rightHalf.x + 50,
+            y: rightHalf.y + 50,
+            angle: 45,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => rightHalf.destroy()
+        });
+
+        // Update the score
+        score += 10;
+        scoreText.setText(`Score: ${score}`);
+    }
+</script>
+</body>
+</html>
