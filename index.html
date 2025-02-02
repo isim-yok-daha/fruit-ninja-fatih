@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fruit Ninja - Cutting Effect</title>
+    <title>Fruit Ninja - Centered Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
         body {
@@ -15,17 +15,28 @@
             height: 100vh;
             background-color: black;
         }
-        canvas {
-            display: block;
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
 <body>
+
+<div id="game-container"></div>
+
 <script>
+    const GAME_WIDTH = 800;  // Oyunun genişliği
+    const GAME_HEIGHT = 450; // Oyunun yüksekliği
+
     const config = {
         type: Phaser.AUTO,
-        width: 480,
-        height: 800,
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
+        parent: 'game-container',
         physics: {
             default: 'arcade',
             arcade: {
@@ -37,6 +48,10 @@
             preload: preload,
             create: create,
             update: update
+        },
+        scale: {
+            mode: Phaser.Scale.FIT,  // Oyunu pencereye sığdır
+            autoCenter: Phaser.Scale.CENTER_BOTH  // Ortala
         }
     };
 
@@ -48,7 +63,7 @@
     const fruitTypes = ['apple', 'orange', 'strawberry'];
 
     function preload() {
-        this.load.image('background', 'assests/background.png');
+        this.load.image('background', 'assets/background.jpg');
         this.load.image('apple', 'assets/apple.png');
         this.load.image('orange', 'assets/orange.png');
         this.load.image('strawberry', 'assets/strawberry.png');
@@ -67,7 +82,7 @@
     }
 
     function create() {
-        this.add.image(240, 400, 'background');
+        this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'background').setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
         scoreText = this.add.text(10, 10, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
         fruits = this.physics.add.group();
 
@@ -90,9 +105,9 @@
     }
 
     function spawnFruit() {
-        const x = Phaser.Math.Between(50, 430);
+        const x = Phaser.Math.Between(50, GAME_WIDTH - 50);
         const type = Phaser.Utils.Array.GetRandom(fruitTypes);
-        const fruit = fruits.create(x, 800, type);
+        const fruit = fruits.create(x, GAME_HEIGHT, type);
         fruit.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400));
         fruit.setInteractive();
         fruit.body.setAllowGravity(true);
