@@ -9,6 +9,11 @@
         body {
             margin: 0;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
         }
         canvas {
             display: block;
@@ -23,6 +28,10 @@
         height: 800,
         physics: {
             default: 'arcade',
+            arcade: {
+                gravity: { y: 300 },
+                debug: false
+            }
         },
         scene: {
             preload: preload,
@@ -32,48 +41,63 @@
     };
 
     const game = new Phaser.Game(config);
-
     let fruits;
     let score = 0;
     let scoreText;
     let lastPointerPosition = null;
+    const fruitTypes = ['apple', 'orange', 'strawberry'];
 
     function preload() {
-        this.load.image('background', 'https://via.placeholder.com/480x800/87CEEB/FFFFFF?text=Background');
-        this.load.image('fruit', 'https://via.placeholder.com/64x64/FF6347/FFFFFF?text=Fruit');
-        this.load.image('fruit_half', 'https://via.placeholder.com/32x64/FF6347/FFFFFF?text=Half'); // Placeholder for sliced fruit
+        this.load.image('background', 'assests/background.png');
+        this.load.image('apple', 'assets/apple.png');
+        this.load.image('orange', 'assets/orange.png');
+        this.load.image('strawberry', 'assets/strawberry.png');
+        this.load.image('apple_up', 'assets/apple_up.png');
+        this.load.image('apple_down', 'assets/apple_down.png');
+        this.load.image('apple_left', 'assets/apple_left.png');
+        this.load.image('apple_right', 'assets/apple_right.png');
+        this.load.image('orange_up', 'assets/orange_up.png');
+        this.load.image('orange_down', 'assets/orange_down.png');
+        this.load.image('orange_left', 'assets/orange_left.png');
+        this.load.image('orange_right', 'assets/orange_right.png');
+        this.load.image('strawberry_up', 'assets/strawberry_up.png');
+        this.load.image('strawberry_down', 'assets/strawberry_down.png');
+        this.load.image('strawberry_left', 'assets/strawberry_left.png');
+        this.load.image('strawberry_right', 'assets/strawberry_right.png');
     }
 
     function create() {
-        // Background
         this.add.image(240, 400, 'background');
-
-        // Score display
         scoreText = this.add.text(10, 10, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
-
-        // Group to hold all fruits
         fruits = this.physics.add.group();
 
-        // Timer for spawning fruits
         this.time.addEvent({
-            delay: 1000, // Spawn every second
+            delay: 1000,
             callback: spawnFruit,
             callbackScope: this,
             loop: true
         });
 
-        // Enable pointer movement for slicing
         this.input.on('pointermove', pointerMoveHandler, this);
     }
 
-    function update() {}
+    function update() {
+        fruits.children.iterate(fruit => {
+            if (fruit) {
+                fruit.angle += fruit.rotationSpeed;
+            }
+        });
+    }
 
     function spawnFruit() {
-        const x = Phaser.Math.Between(50, 430); // Random horizontal position
-        const fruit = fruits.create(x, 800, 'fruit');
-        fruit.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400)); // Random speed
+        const x = Phaser.Math.Between(50, 430);
+        const type = Phaser.Utils.Array.GetRandom(fruitTypes);
+        const fruit = fruits.create(x, 800, type);
+        fruit.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400));
         fruit.setInteractive();
-        fruit.body.setAllowGravity(false);
+        fruit.body.setAllowGravity(true);
+        fruit.type = type;
+        fruit.rotationSpeed = Phaser.Math.FloatBetween(2, 5);
     }
 
     function pointerMoveHandler(pointer) {
@@ -82,33 +106,38 @@
             return;
         }
 
-        // Check if pointer intersects with any fruits
         fruits.children.iterate(fruit => {
             if (fruit && Phaser.Geom.Intersects.LineToRectangle(
                 new Phaser.Geom.Line(lastPointerPosition.x, lastPointerPosition.y, pointer.x, pointer.y),
                 fruit.getBounds()
             )) {
-                // Slice the fruit
-                sliceFruit(this, fruit);
+                sliceFruit(this, fruit, lastPointerPosition, pointer);
             }
         });
 
         lastPointerPosition = { x: pointer.x, y: pointer.y };
     }
 
-    function sliceFruit(scene, fruit) {
-        // Destroy the original fruit
+    function sliceFruit(scene, fruit, start, end) {
         fruit.destroy();
 
-        // Add two halves at the same position
-        const leftHalf = scene.add.image(fruit.x - 16, fruit.y, 'fruit_half');
-        const rightHalf = scene.add.image(fruit.x + 16, fruit.y, 'fruit_half');
+        let diffX = end.x - start.x;
+        let diffY = end.y - start.y;
+        let sliceDirection = Math.abs(diffX) > Math.abs(diffY) ? 'horizontal' : 'vertical';
+        let leftHalf, rightHalf;
 
-        // Animate the halves
+        if (sliceDirection === 'horizontal') {
+            leftHalf = scene.add.image(fruit.x, fruit.y, fruit.type + '_up');
+            rightHalf = scene.add.image(fruit.x, fruit.y, fruit.type + '_down');
+        } else {
+            leftHalf = scene.add.image(fruit.x, fruit.y, fruit.type + '_left');
+            rightHalf = scene.add.image(fruit.x, fruit.y, fruit.type + '_right');
+        }
+
         scene.tweens.add({
             targets: leftHalf,
-            x: leftHalf.x - 50,
-            y: leftHalf.y + 50,
+            x: leftHalf.x - (sliceDirection === 'horizontal' ? 50 : 0),
+            y: leftHalf.y - (sliceDirection === 'horizontal' ? 0 : 50),
             angle: -45,
             alpha: 0,
             duration: 500,
@@ -117,15 +146,14 @@
 
         scene.tweens.add({
             targets: rightHalf,
-            x: rightHalf.x + 50,
-            y: rightHalf.y + 50,
+            x: rightHalf.x + (sliceDirection === 'horizontal' ? 50 : 0),
+            y: rightHalf.y + (sliceDirection === 'horizontal' ? 0 : 50),
             angle: 45,
             alpha: 0,
             duration: 500,
             onComplete: () => rightHalf.destroy()
         });
 
-        // Update the score
         score += 10;
         scoreText.setText(`Score: ${score}`);
     }
